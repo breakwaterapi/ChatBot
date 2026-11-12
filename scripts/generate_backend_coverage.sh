@@ -17,7 +17,7 @@ source venv/bin/activate
 # Install dependencies
 echo "Installing dependencies..."
 pip install --upgrade pip
-pip install pytest pytest-cov fastapi uvicorn python-dotenv pydantic requests pytz httpx aiohttp mistralai==0.0.7 pytest-mock pytest-asyncio
+pip install pytest pytest-cov fastapi uvicorn python-dotenv pydantic requests pytz httpx aiohttp mistralai>=2 pytest-mock pytest-asyncio
 
 # Create .coveragerc
 cat > .coveragerc << EOF

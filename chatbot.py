@@ -3,8 +3,8 @@ import requests
 import os
 from fastapi import FastAPI, Query, Body, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
+from mistralai.client import Mistral
+from mistralai.client.models import SystemMessage, UserMessage
 import re
 import uvicorn
 import dotenv
@@ -18,7 +18,7 @@ dotenv.load_dotenv()
 
 # Initialize Mistral client
 api_key = os.getenv("MISTRAL_API_KEY")
-client = MistralClient(api_key=api_key)
+client = Mistral(api_key=api_key)
 
 # Initialize FastAPI app
 app = FastAPI(title="Smart City API", description="API for querying smart city sensor data")
@@ -142,11 +142,11 @@ Do not include any other text or explanation in your response, just the JSON obj
 # Query the Mistral API for classification
 def query_mistral_classification(system_prompt, user_query):
     messages = [
-        ChatMessage(role="system", content=system_prompt),
-        ChatMessage(role="user", content=user_query)
+        SystemMessage(content=system_prompt),
+        UserMessage(content=user_query)
     ]
     
-    response = client.chat(
+    response = client.chat.complete(
         model="mistral-large-latest",
         messages=messages
     )
@@ -389,14 +389,13 @@ def generate_response(prompts, classification, user_query, node_data, is_tempora
         prompt_template = build_non_temporal_prompt(prompts, classification, user_query, node_data)
 
     messages = [
-        ChatMessage(
-            role="system",
+        SystemMessage(
             content="You are a smart city assistant providing extremely concise answers (3-4 lines maximum). When analyzing temporal data, include key statistics (min/max/avg) while keeping responses brief. Always compare historical data with today's readings when appropriate. IMPORTANT: When displaying temperature values, use the proper degree symbol '°C' (Unicode U+00B0) rather than 'Â°C'. Format all units correctly in your responses."
         ),
-        ChatMessage(role="user", content=prompt_template)
+        UserMessage(content=prompt_template)
     ]
 
-    response = client.chat(
+    response = client.chat.complete(
         model="mistral-large-latest",
         messages=messages
     )
@@ -617,11 +616,11 @@ IMPORTANT:
     
     # Query Mistral for the response
     messages = [
-        ChatMessage(role="system", content="You are a smart city assistant providing a comprehensive yet concise overview of node statuses. Include all node details clearly and highlight any significant status variations."),
-        ChatMessage(role="user", content=prompt)
+        SystemMessage(content="You are a smart city assistant providing a comprehensive yet concise overview of node statuses. Include all node details clearly and highlight any significant status variations."),
+        UserMessage(content=prompt)
     ]
     
-    response = client.chat(
+    response = client.chat.complete(
         model="mistral-large-latest",
         messages=messages
     )
