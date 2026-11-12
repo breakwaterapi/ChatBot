@@ -49,13 +49,13 @@ def test_query_post(mock_process):
     assert response.status_code == 200
     assert "response" in response.json()
 
-@patch('chatbot.MistralClient')
+@patch('chatbot.Mistral')
 @patch('chatbot.fetch_node_data')
 def test_process_query_average(mock_fetch, mock_mistral):
     mock_fetch.return_value = {"temperature": 25}
     mock_chat = MagicMock()
     mock_chat.choices = [MagicMock(message=MagicMock(content="Test response"))]
-    mock_mistral.return_value.chat.return_value = mock_chat
+    mock_mistral.return_value.chat.complete.return_value = mock_chat
     
     response = client.post("/query", json={"query": "What is the average temperature?"})
     assert response.status_code == 200
@@ -84,11 +84,11 @@ def test_query_post_full(mock_process):
     assert "classification" in response.json()
     assert "is_temporal" in response.json()
 
-@patch('chatbot.MistralClient')
+@patch('chatbot.Mistral')
 def test_debug_endpoint(mock_mistral):
     mock_chat = MagicMock()
     mock_chat.choices = [MagicMock(message=MagicMock(content='{"classification": "SPECIFIC", "node_ids": ["aq-01"]}'))]
-    mock_mistral.return_value.chat.return_value = mock_chat
+    mock_mistral.return_value.chat.complete.return_value = mock_chat
     
     response = client.get("/debug?q=test")
     assert response.status_code == 200
@@ -354,11 +354,11 @@ def test_process_temporal_data_empty():
     result = process_temporal_data(empty_data)
     assert result["node1"] == {"error": "No data available"}
 
-@patch('chatbot.MistralClient')
+@patch('chatbot.Mistral')
 def test_malformed_llm_response(mock_mistral):
     mock_chat = MagicMock()
     mock_chat.choices = [MagicMock(message=MagicMock(content="Invalid JSON response"))]
-    mock_mistral.return_value.chat.return_value = mock_chat
+    mock_mistral.return_value.chat.complete.return_value = mock_chat
     
     response = client.post("/query", json={"query": "test query"})
     assert response.status_code == 200
@@ -514,10 +514,10 @@ def test_generate_response_formats():
     ]
     
     for classification, is_temporal, time_period in test_cases:
-        with patch('chatbot.MistralClient') as mock_mistral:
+        with patch('chatbot.Mistral') as mock_mistral:
             mock_chat = MagicMock()
             mock_chat.choices = [MagicMock(message=MagicMock(content="Test response"))]
-            mock_mistral.return_value.chat.return_value = mock_chat
+            mock_mistral.return_value.chat.complete.return_value = mock_chat
             
             response = generate_response(
                 prompts,
